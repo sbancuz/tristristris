@@ -24,7 +24,7 @@ const margin = 4;
 
 function drawX(x_px, y_px, scale = 1) {
 	context.strokeStyle = 'green';
-	context.lineWidth = 3;
+	context.lineWidth = 1;
 
 	// First diagonal line
 	context.beginPath();
@@ -41,7 +41,7 @@ function drawX(x_px, y_px, scale = 1) {
 
 function drawO(x_px, y_px, scale = 1) {
     context.strokeStyle = 'blue';
-    context.lineWidth = 3;
+    context.lineWidth = 1;
 
     context.beginPath();
     context.arc(x_px * pow(3, scale) + cell_width * pow(3, scale) / 2, y_px * pow(3, scale) + cell_height * pow(3, scale) / 2, cell_width * pow(3, scale) / 2 - margin, 0, 2 * Math.PI);
