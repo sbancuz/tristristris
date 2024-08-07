@@ -14,36 +14,37 @@ const ini_state = {
 	grid : [],
 	rec_level : -1,
 	turn : "X",
-	guide : null
+	guide : [{x: 0, y: 0, scale: 4}]
 }
 
 let state = JSON.parse(JSON.stringify(ini_state));
 
 const grid_colors = ['lightgray', 'gray', 'black']
+const margin = 4;
 
 function drawX(x_px, y_px, scale = 1) {
-	context.strokeStyle = 'red';
-	context.lineWidth = 5;
+	context.strokeStyle = 'green';
+	context.lineWidth = 3;
 
 	// First diagonal line
 	context.beginPath();
-	context.moveTo(x_px * pow(3, scale), y_px * pow(3, scale)); // Starting
-	context.lineTo((x_px + cell_width) * pow(3, scale), (y_px + cell_height) * pow(3, scale)); // Ending point (bottom-right)
+	context.moveTo(x_px * pow(3, scale) + margin, y_px * pow(3, scale) + margin); // Starting
+	context.lineTo((x_px + cell_width) * pow(3, scale) - margin, (y_px + cell_height) * pow(3, scale) - margin); // Ending point (bottom-right)
 	context.stroke();
 
 	// Second diagonal line
 	context.beginPath();
-	context.moveTo((x_px + cell_width) * pow(3, scale), y_px * pow(3, scale)); // Starting point (
-	context.lineTo(x_px * pow(3, scale), (y_px + cell_height) * pow(3, scale)); // Ending point (
+	context.moveTo((x_px + cell_width) * pow(3, scale) - margin, y_px * pow(3, scale) + margin); // Starting point (
+	context.lineTo(x_px * pow(3, scale) + margin, (y_px + cell_height) * pow(3, scale) - margin); // Ending point (
 	context.stroke();
 }
 
 function drawO(x_px, y_px, scale = 1) {
-    context.strokeStyle = 'green';
-    context.lineWidth = 5;
+    context.strokeStyle = 'blue';
+    context.lineWidth = 3;
 
     context.beginPath();
-    context.arc(x_px * pow(3, scale) + cell_width * pow(3, scale) / 2, y_px * pow(3, scale) + cell_height * pow(3, scale) / 2, cell_width * pow(3, scale) / 2, 0, 2 * Math.PI);
+    context.arc(x_px * pow(3, scale) + cell_width * pow(3, scale) / 2, y_px * pow(3, scale) + cell_height * pow(3, scale) / 2, cell_width * pow(3, scale) / 2 - margin, 0, 2 * Math.PI);
     context.stroke();
 }
 
@@ -54,7 +55,6 @@ function drawSymbol(x, y, sym, scale = 1) {
 		drawO(x * cell_width, y * cell_height, scale);
 	}
 }
-
 
 function drawGrid(x, y, scale = 1) {
 	context.strokeStyle = grid_colors[scale - 1];
@@ -156,8 +156,11 @@ function paint(state) {
 	clear();
 	drawTable(state.rec_level);
 	drawMoves(state);
-	// if (guide !== null)
-	// 	drawRect(guide.x, guide.y, guide.scale);
+	if (state.guide !== null) {
+		for (let i = 0; i < state.guide.length; i++) {
+			drawRect(state.guide[i].x, state.guide[i].y, state.guide[i].scale);
+		}
+	}
 }
 
 const winPatterns = [
@@ -208,52 +211,61 @@ function updateBoard(grid, x, y, sym, scale) {
 	}
 }
 
-// function updateGuide(grid, rec, x = 0, y = 0) {
-// 	if (rec === 0) {
-// 		return;
-// 	}
-// 	g = next_guide.pop();
-// 	const idx = g.x + 3 * g.y;
-//
-// 	if (typeof grid[idx] === 'string') {
-// 		guide = {x: x, y: y, scale: rec + 1};
-// 		return;
-// 	}
-//
-// 	updateGuide(grid[idx], rec - 1, g.x, g.y);
-// 	if (rec === 1) {
-// 		return;
-// 	}
-//
-// 	// console.log(g);
-// 	// guide.x += g.x * 3;
-// 	// guide.y += g.y * 3;
-// }
+function get(grid, x, y, scale) {
+	if (scale === 0) {
+		return [0, ' '];
+	}
 
-// function get(grid, x, y, scale) {
-// 	const tx = Math.floor(x / pow(3, scale - 1));
-// 	const ty = Math.floor(y / pow(3, scale - 1));
-// 	const idx = tx + 3 * ty;
-//
-// 	if (grid[idx] instanceof Array) {
-// 		return get(grid[idx], x % pow(3, scale - 1), y % pow(3, scale - 1), scale - 1);
-// 	} else {
-// 		return grid[idx];
-// 	}
-// }
-//
-// function updateGuide(x, y) {
-// 	let tx = x;
-// 	let ty = y;
-// 	let scale = 3;
-//
-// 	if (get(state.grid, x, y, scale) !== ' ') {
-// 		tx = x % 3 + (x % 9) * 3;
-// 		ty = y % 3 + (y % 9) * 3;
-//
-// 		guide = {x: tx, y: ty, scale: --scale};
-// 	}
-// }
+	const tx = Math.floor(x / pow(3, scale - 1));
+	const ty = Math.floor(y / pow(3, scale - 1));
+	const idx = tx + 3 * ty;
+
+	if (grid[idx] instanceof Array) {
+		return get(grid[idx], x % pow(3, scale - 1), y % pow(3, scale - 1), scale - 1);
+	} else {
+		return [scale, grid[idx]];
+	}
+}
+
+function updateGuide(x, y) {
+	const lv1x = x % 9; 
+	const lv1y = y % 9;
+	let scale = 1;
+
+	const [s, r] = get(state.grid, lv1x, lv1y, ++scale);
+	if (s === 1 && r !== ' ') {
+		const lv2x = Math.floor(lv1x / 3);
+		const lv2y = Math.floor(lv1y / 3);
+
+		state.guide.push({x: lv2x, y: lv2y, scale: ++scale});
+
+		return;
+	}
+	if (s === 2 && r != ' ') {
+		const lv3x = lv1x % 3;
+		const lv3y = lv1y % 3;
+	
+		let cont = 0;
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
+				const [s3, r3] = get(state.grid, i, j, 1);
+				if (s3 === 0) {
+					state.guide.push({x: lv3x + i * 3, y: lv3y + j * 3, scale: scale});
+				} else {
+					cont += 1;
+				}
+			}
+		}
+
+		if (cont === 9) {
+			state.guide = [{x: 0, y: 0, scale: 4}];
+		}
+
+		return;
+	}
+
+	state.guide.push({x: lv1x, y: lv1y, scale: scale});
+}
 
 let moves = []
 
@@ -262,15 +274,36 @@ canvas.addEventListener('click', (event) => {
 	const x = Math.floor((event.clientX - rect.left) / BOARD_SIZE * 27);
 	const y = Math.floor((event.clientY - rect.top) / BOARD_SIZE * 27);
 
-	next_guide = [];
-
-	if (updateBoard(state.grid, x, y, state.turn, state.rec_level)) {
-		state.turn = state.turn === "X" ? "O" : "X";
-		moves.push(JSON.parse(JSON.stringify(state)));
+	if (!isValidMove(x, y)) {
+		return;
 	}
 
-	paint(state);
+	state.guide = [];
+	if (updateBoard(state.grid, x, y, state.turn, state.rec_level)) {
+		state.turn = state.turn === "X" ? "O" : "X";
+		updateGuide(x, y);
+
+		moves.push(JSON.parse(JSON.stringify(state)));
+		paint(state);
+	}
 });
+
+function isValidMove(x, y) {
+	for (let i = 0; i < state.guide.length; i++) {
+		const g = state.guide[i];
+		const tx = g.x * pow(3, g.scale - 1);
+		const ty = g.y * pow(3, g.scale - 1); 
+
+		const lim_x = tx + pow(3, g.scale - 1);
+		const lim_y = ty + pow(3, g.scale - 1);
+		if ((tx <= x && x < lim_x) && (ty <= y && y < lim_y)) {
+			const [s, c] = get(state.grid, x, y, 3);
+			return c === ' ';
+		}
+	}
+
+	return false;
+}
 
 function undo() {
 	if (moves.length > 1) {
@@ -281,9 +314,22 @@ function undo() {
 }
 
 function reset() {
+	moves = []
 	setup(3);
 	paint(state);
 }
 
-setup(3);
-paint(state);
+window.onpagehide = () => {
+	localStorage.setItem('moves', JSON.stringify(moves));
+}
+
+window.onload = () => {
+	const moves_str = localStorage.getItem('moves');
+	if (moves_str !== null) {
+		moves = JSON.parse(moves_str);
+		state = moves[moves.length - 1];
+	} else {
+		setup(3);
+	}
+	paint(state);
+}
