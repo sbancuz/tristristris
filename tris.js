@@ -3,7 +3,7 @@ const context = canvas.getContext('2d');
 
 const pow = Math.pow;
 
-const cell_width = 10;
+const cell_width = (Math.min(window.innerWidth, window.innerHeight) / 81) - 3;
 const cell_height = cell_width;
 
 const BOARD_SIZE = cell_width * 27 * 3;
