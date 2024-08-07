@@ -126,6 +126,7 @@ function drawMoves(state) {
 
 function drawRect(x, y, scale) {
 	context.strokeStyle = 'red';
+ context.lineWidth = 3;
 	context.strokeRect(x * cell_width * pow(3, scale), y * cell_height * pow(3, scale), cell_width * pow(3, scale), cell_height * pow(3, scale));
 }
 
