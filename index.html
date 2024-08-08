@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Example</title>
+    <title>TrisTrisTris</title>
     <style>
         body {
             display: flex;
@@ -17,6 +17,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 36px;
+            color: #333;
+        }
+        #currentPlayer {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #555;
         }
         canvas {
             border: 1px solid black;
@@ -45,6 +55,8 @@
 </head>
 <body>
     <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="currentPlayer">Current Player: X</div>
         <canvas id="myCanvas" width="810" height="810"></canvas>
         <div class="buttons">
             <button onClick="reset()">RESET</button>
@@ -54,3 +66,4 @@
     <script src="tris.js"></script>
 </body>
 </html>
+

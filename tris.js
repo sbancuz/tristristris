@@ -1,6 +1,14 @@
 const canvas = document.getElementById('myCanvas');
 const context = canvas.getContext('2d');
 
+const currentPlayerElement = document.getElementById('currentPlayer');
+
+// Function to switch the player
+function setPlayer(turn) {
+    state.turn = turn;
+    currentPlayerElement.textContent = `Current Player: ${state.turn}`;
+}
+
 const pow = Math.pow;
 
 const cell_width = (Math.min(window.innerWidth, window.innerHeight) / 81) - 3;
@@ -24,7 +32,7 @@ const margin = 4;
 
 function drawX(x_px, y_px, scale = 1) {
 	context.strokeStyle = 'green';
-	context.lineWidth = 1;
+	context.lineWidth = 1 * scale;
 
 	// First diagonal line
 	context.beginPath();
@@ -41,7 +49,7 @@ function drawX(x_px, y_px, scale = 1) {
 
 function drawO(x_px, y_px, scale = 1) {
     context.strokeStyle = 'blue';
-    context.lineWidth = 1;
+    context.lineWidth = 1 * scale;
 
     context.beginPath();
     context.arc(x_px * pow(3, scale) + cell_width * pow(3, scale) / 2, y_px * pow(3, scale) + cell_height * pow(3, scale) / 2, cell_width * pow(3, scale) / 2 - margin, 0, 2 * Math.PI);
@@ -154,9 +162,15 @@ function clear() {
 }
 
 function paint(state) {
+	setPlayer(state.turn);
+
 	clear();
 	drawTable(state.rec_level);
-	drawMoves(state);
+	if (typeof state.grid === 'string') {
+		drawSymbol(0, 0, state.grid, state.rec_level + 1);
+	} else {
+		drawMoves(state);
+	}
 	if (state.guide !== null) {
 		for (let i = 0; i < state.guide.length; i++) {
 			drawRect(state.guide[i].x, state.guide[i].y, state.guide[i].scale);
@@ -250,7 +264,8 @@ function updateGuide(x, y) {
 		for (let i = 0; i < 3; i++) {
 			for (let j = 0; j < 3; j++) {
 				const [s3, r3] = get(state.grid, i, j, 1);
-				if (s3 === 0) {
+				const [s4, r4] = get(state.grid, i * 3 + lv3x, j * 3 + lv3y, 2);
+				if (s3 === 0 && s4 === 0) {
 					state.guide.push({x: lv3x + i * 3, y: lv3y + j * 3, scale: scale});
 				} else {
 					cont += 1;
@@ -281,8 +296,15 @@ canvas.addEventListener('click', (event) => {
 
 	state.guide = [];
 	if (updateBoard(state.grid, x, y, state.turn, state.rec_level)) {
-		state.turn = state.turn === "X" ? "O" : "X";
-		updateGuide(x, y);
+		const w = checkWin(state.grid);
+		if (w !== null) {
+			state.grid = w; 
+			state.guide = [];
+		} else {
+			updateGuide(x, y);
+		}
+
+		setPlayer(state.turn === 'X' ? 'O' : 'X');
 
 		moves.push(JSON.parse(JSON.stringify(state)));
 		paint(state);
